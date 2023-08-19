@@ -165,3 +165,122 @@ long i = (uint) j;
 ```
 
 i = 5
+
+# MS SQL
+
+#### 13. Як у MSSQL можна дізнатися ID запису, що додався в результаті виконання команди INSERT?
+
+1. Використовуючи `SCOPE_IDENTITY()`:
+
+```sql
+SELECT SCOPE_IDENTITY();
+```
+
+2. Використовуючи `@@IDENTITY`
+
+```sql
+SELECT @@IDENTITY;
+```
+
+3. Використовуючи `OUTPUT` всередині операції `INSERT`:
+
+```sql
+INSERT INTO SampleTable (Data1, Data2)
+OUTPUT INSERTED.ID AS InsertedID
+VALUES ('Text1', 'Text2');
+```
+
+#### 14. Є 2 таблиці: таблиця гостей (Guests) і таблиця компаній (Companies), від яких ці гості приїхали.
+
+| CompanyID | CompanyName    |
+|-----------|----------------|
+| 1         | ExpertSolution |
+| 2         | ServioSoft     |
+| 3         | Apple          |
+
+| GuestID | CompanyID | Name              |
+|---------|-----------|-------------------|
+| 1       | 1         | Іван Василів      |
+| 2       | 1         | Петро Симонович   |
+| 3       | 2         | Василь Пупкін     |
+| 4       | 3         | Сергій Іванов     |
+| 5       | 2         | Роман Пушко       |
+| 6       | 1         | Станіслав Мотужко |
+| 7       | NULL      | Рустам Алекжі     |
+
+1. **Зобразіть результат виконання запиту:**
+```sql
+Select G.Name, C.CompanyName
+From Guests as G
+Left Join Companies as C on G.CompanyID = C.CompanyID;
+```
+
+| Name              | CompanyName    |
+|-------------------|----------------|
+| Іван Василів      | ExpertSolution |
+| Петро Симонович   | ExpertSolution |
+| Василь Пупкін     | ServioSoft     |
+| Сергій Іванов     | Apple          |
+| Роман Пушко       | ServioSoft     |
+| Станіслав Мотужко | ExpertSolution |
+| Рустам Алекжі     | NULL           |
+
+```sql
+Select G.Name, C.CompanyName
+Join Guests G on G.CompanyID = C.CompanyID
+From Companies C
+```
+
+Запит має непрвильну структуру, виправлений запит та результат:
+```sql
+SELECT G.Name, C.CompanyName
+FROM Guests G
+JOIN Companies C ON G.CompanyID = C.CompanyID;
+```
+
+| Name              | CompanyName    |
+|-------------------|----------------|
+| Іван Василів      | ExpertSolution |
+| Петро Симонович   | ExpertSolution |
+| Василь Пупкін     | ServioSoft     |
+| Сергій Іванов     | Apple          |
+| Роман Пушко       | ServioSoft     |
+| Станіслав Мотужко | ExpertSolution |
+
+2. **Напишіть запит, який би виводив такі записи:**
+
+- Усіх гостей, які живуть від компанії ExpertSolution
+
+```sql
+SELECT G.*
+FROM Guests G
+JOIN Companies C ON G.CompanyID = C.CompanyID
+WHERE C.CompanyName = 'ExpertSolution';
+```
+- Усі компанії із зазначенням кількості людей, які живуть від них, відсортованих за зменшенням кількості гостей
+
+```sql
+SELECT C.CompanyName, COUNT(G.GuestID) AS NumberOfGuests
+FROM Companies C
+LEFT JOIN Guests G ON C.CompanyID = G.CompanyID
+GROUP BY C.CompanyName
+ORDER BY NumberOfGuests DESC;
+```
+
+- По одному (будь-якому) гостю від кожної компанії, із запиту виводити тільки назву компанії, прізвище та перша літера імені гостя.
+
+```sql
+SELECT 
+    C.CompanyName,
+    LEFT(G.Name, 1) AS FirstNameInitial,
+    G.Name AS GuestLastName
+FROM (
+    SELECT 
+        G.CompanyID,
+        MIN(G.GuestID) AS MinGuestID
+    FROM Guests G
+    GROUP BY G.CompanyID
+) AS MinGuests
+JOIN Guests G ON MinGuests.MinGuestID = G.GuestID
+JOIN Companies C ON G.CompanyID = C.CompanyID;
+```
