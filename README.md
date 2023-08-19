@@ -2,6 +2,8 @@
 
 1. [HTML, CSS](#html-css)
 2. [C#, Asp.NET](#c-aspnet)
+3. [MS SQL](#ms-sql)
+4. [LINQ](#linq)
 
 # HTML, CSS
 
@@ -283,4 +285,118 @@ FROM (
 ) AS MinGuests
 JOIN Guests G ON MinGuests.MinGuestID = G.GuestID
 JOIN Companies C ON G.CompanyID = C.CompanyID;
+```
+
+# LINQ
+
+#### 15. На основі бази даних в Entity Framework сформовано такі класи:
+
+```csharp
+public class Guest
+{
+    public int GuestID;
+    public int CompanyID;
+    public Company Company;
+    public string Name;
+}
+
+public class Company
+{
+    public int CompanyID;
+    public string CompanyName;
+    public TrackableCollection<Guest> Guests;
+}
+```
+**Є 2 функції, які повертають колекції відповідних таблиць:**
+
+```csharp
+public IQueryable<Guest> GetGuests();
+public IQueryable<Company> GetCompanies();
+```
+
+**Є кілька DTO класів для виведення інформації користувачеві**
+
+```csharp
+public class GuestDTO1
+{
+    public int GuestID;
+    public string Name;
+    public string CompanyName;
+}
+
+public class CompanyDTO2
+{
+    public int CompanyID;
+    public string CompanyName;
+    public int GuestCount;
+}
+
+public class CompanyDTO3
+{
+    public int CompanyID;
+    public string CompanyName;
+    public string GuestNames;
+}
+```
+
+**Напишіть LINQ запит, використовуючи "лямбда" вирази, що повертають такі
+записи:**
+
+1. **Усіх гостей, які живуть від компанії ExpertSolution**
+
+```csharp
+var guests = GetGuests()
+    .Where(g => g.Company.CompanyName == "ExpertSolution")
+    .Select(g => new GuestDTO1
+    {
+        GuestID = g.GuestID,
+        Name = g.Name,
+        CompanyName = g.Company.CompanyName
+    })
+    .ToList();
+```
+
+2. **Усі компанії із зазначенням кількості людей, які живуть від них, відсортованих за зменшенням кількості гостей.**
+
+```csharp
+var companies = GetCompanies()
+    .GroupJoin(
+        GetGuests(),
+        c => c.CompanyID,
+        g => g.CompanyID,
+        (company, guests) => new CompanyDTO2
+        {
+            CompanyID = company.CompanyID,
+            CompanyName = company.CompanyName,
+            GuestCount = guests.Count()
+        })
+    .OrderByDescending(c => c.GuestCount);
+```
+
+3. **Усі компанії, для яких є гості з прізвищем, що закінчується на "ко". У результат вивести список таких компаній, без даних гостя.**
+
+```csharp
+var targetCompanies = GetCompanies()
+    .Where(c => c.Guests.Any(g => g.Name.EndsWith("ко")))
+    .Select(c => new CompanyDTO2
+    {
+        CompanyID = c.CompanyID,
+        CompanyName = c.CompanyName
+    })
+    .ToList();
+```
+
+4. **Усі компанії та гостей, які проживають від них. У результаті має виводитися назва компанії, список імен гостей через кому. Для виведення результату використовувати клас CompanyDTO3**
+
+```csharp
+var result = GetCompanies()
+    .Select(c => new CompanyDTO3
+    {
+        CompanyID = c.CompanyID,
+        CompanyName = c.CompanyName,
+        GuestNames = string.Join(", ", GetGuests()
+            .Where(g => g.CompanyID == c.CompanyID)
+            .Select(g => g.Name))
+    })
+    .ToList();
 ```
