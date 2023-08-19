@@ -4,6 +4,7 @@
 2. [C#, Asp.NET](#c-aspnet)
 3. [MS SQL](#ms-sql)
 4. [LINQ](#linq)
+5. [JS, jQuery](#js-jquery)
 
 # HTML, CSS
 
