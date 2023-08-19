@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <style>
+        table {
+            width: 100%;
+        }
+        td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-end {
+            text-align: end;
+        }
+    </style>
+    <table>
+        <tr>
+            <td>a</td>
+            <td>b</td>
+            <td class="text-center" rowspan="3">d</td>
+        </tr>
+        <tr>
+            <td class="text-center" colspan="2">c</td>
+        </tr>
+        <tr class="text-end">
+            <td>e</td>
+            <td>f</td>
+        </tr>
+    </table>
+</body>
+</html>
